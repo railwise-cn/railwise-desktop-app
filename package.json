@@ -7,7 +7,7 @@
   "license": "MIT",
   "scripts": {
     "typecheck": "tsgo -b",
-    "predev": "bun ./scripts/predev.ts",
+    "predev": "bun ./scripts/prepare.ts",
     "dev": "vite",
     "build": "bun run typecheck && vite build",
     "build:analyze": "bun run build && bun run analyze",
@@ -20,12 +20,12 @@
     "tauri": "tauri"
   },
   "dependencies": {
-    "@railwise/app": "workspace:*",
-    "@railwise/ui": "workspace:*",
-    "@railwise/util": "workspace:*",
+    "@railwise/app": "^1.2.8",
+    "@railwise/ui": "^1.2.8",
+    "@railwise/util": "^1.2.8",
     "@solid-primitives/i18n": "2.2.1",
-    "@solid-primitives/storage": "catalog:",
-    "@solidjs/router": "catalog:",
+    "@solid-primitives/storage": "4.3.3",
+    "@solidjs/router": "0.15.4",
     "@tauri-apps/api": "^2",
     "@tauri-apps/plugin-clipboard-manager": "~2",
     "@tauri-apps/plugin-deep-link": "~2",
@@ -42,17 +42,17 @@
     "@tauri-apps/plugin-window-state": "~2",
     "maplibre-gl": "5.24.0",
     "uplot": "1.6.32",
-    "virtua": "catalog:",
-    "solid-js": "catalog:",
-    "@solidjs/meta": "catalog:"
+    "virtua": "0.42.3",
+    "solid-js": "1.9.10",
+    "@solidjs/meta": "0.29.4"
   },
   "devDependencies": {
     "@actions/artifact": "4.0.0",
-    "@playwright/test": "catalog:",
+    "@playwright/test": "1.51.0",
     "@tauri-apps/cli": "^2",
-    "@types/bun": "catalog:",
-    "@typescript/native-preview": "catalog:",
+    "@types/bun": "1.3.9",
+    "@typescript/native-preview": "7.0.0-dev.20251207.1",
     "typescript": "~5.6.2",
-    "vite": "catalog:"
+    "vite": "7.1.4"
   }
 }

@@ -15,8 +15,17 @@
     "noEmit": true,
     "emitDeclarationOnly": false,
     "outDir": "node_modules/.ts-dist",
-    "types": ["vite/client"]
+    "types": [
+      "vite/client"
+    ],
+    "paths": {
+      "@/*": [
+        "./node_modules/@railwise/app/src/*"
+      ]
+    }
   },
-  "references": [{ "path": "../app" }],
-  "include": ["src", "package.json"]
+  "include": [
+    "src",
+    "package.json"
+  ]
 }
