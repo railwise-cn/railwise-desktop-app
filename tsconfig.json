@@ -16,7 +16,8 @@
     "emitDeclarationOnly": false,
     "outDir": "node_modules/.ts-dist",
     "types": [
-      "vite/client"
+      "vite/client",
+      "node"
     ],
     "paths": {
       "@/*": [

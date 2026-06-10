@@ -1,12 +1,15 @@
 import { defineConfig } from "vite"
 import appPlugin from "@railwise/app/vite"
+import path from "node:path"
+import { fileURLToPath } from "node:url"
 
 const host = process.env.TAURI_DEV_HOST
+const app = path.dirname(fileURLToPath(import.meta.resolve("@railwise/app")))
 
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [appPlugin],
-  publicDir: "../app/public",
+  publicDir: path.join(app, "..", "public"),
   // Vite options tailored for Tauri development and only applied in `tauri dev` or `tauri build`
   //
   // 1. prevent Vite from obscuring rust errors
@@ -24,12 +27,12 @@ export default defineConfig({
       output: {
         manualChunks: {
           // Split vendor chunks for better caching
-          'solid': ['solid-js'],
-          'tauri': ['@tauri-apps/api'],
-          'railwise-app': ['@railwise/app'],
-          'railwise-ui': ['@railwise/ui']
-        }
-      }
+          solid: ["solid-js"],
+          tauri: ["@tauri-apps/api"],
+          "railwise-app": ["@railwise/app"],
+          "railwise-ui": ["@railwise/ui"],
+        },
+      },
     },
     // Desktop bundles ship Monaco workers and local-first UI assets; keep this
     // threshold aligned with the largest intentional worker chunk.
@@ -38,16 +41,16 @@ export default defineConfig({
     ...(process.env.ANALYZE && {
       rollupOptions: {
         output: {
-          manualChunks: undefined // Let rollup-plugin-visualizer handle this
-        }
-      }
-    })
+          manualChunks: undefined, // Let rollup-plugin-visualizer handle this
+        },
+      },
+    }),
   },
   // 2. tauri expects a fixed port, fail if that port is not available
   server: {
     port: 1420,
     strictPort: true,
-    host: host || false,
+    host: host || "127.0.0.1",
     hmr: host
       ? {
           protocol: "ws",
