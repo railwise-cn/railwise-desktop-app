@@ -1,4 +1,4 @@
-use futures::{FutureExt, Stream, StreamExt, future};
+use futures::{Stream, StreamExt, future};
 use process_wrap::tokio::CommandWrap;
 #[cfg(unix)]
 use process_wrap::tokio::ProcessGroup;
@@ -47,15 +47,48 @@ const CLI_BINARY_NAME: &str = "railwise";
 #[cfg(windows)]
 const CLI_BINARY_NAME: &str = "railwise.exe";
 
-#[derive(serde::Deserialize, Debug)]
-pub struct ServerConfig {
-    pub hostname: Option<String>,
-    pub port: Option<u32>,
+fn desktop_dir(app: &tauri::AppHandle) -> PathBuf {
+    app.path()
+        .resolve("sidecar", BaseDirectory::AppLocalData)
+        .expect("Failed to resolve desktop sidecar data dir")
 }
 
-#[derive(serde::Deserialize, Debug)]
-pub struct Config {
-    pub server: Option<ServerConfig>,
+fn env_path(path: PathBuf) -> String {
+    path.to_string_lossy().to_string()
+}
+
+fn desktop_envs(dir: &Path) -> Vec<(String, String)> {
+    vec![
+        (
+            "RAILWISE_EXPERIMENTAL_ICON_DISCOVERY".to_string(),
+            "true".to_string(),
+        ),
+        (
+            "RAILWISE_EXPERIMENTAL_FILEWATCHER".to_string(),
+            "true".to_string(),
+        ),
+        ("RAILWISE_CLIENT".to_string(), "desktop".to_string()),
+        ("RAILWISE_HOME".to_string(), env_path(dir.join("home"))),
+        (
+            "RAILWISE_DISABLE_PROJECT_CONFIG".to_string(),
+            "true".to_string(),
+        ),
+        (
+            "RAILWISE_DISABLE_AUTOUPDATE".to_string(),
+            "true".to_string(),
+        ),
+        ("XDG_CONFIG_HOME".to_string(), env_path(dir.join("config"))),
+        ("XDG_DATA_HOME".to_string(), env_path(dir.join("data"))),
+        ("XDG_CACHE_HOME".to_string(), env_path(dir.join("cache"))),
+        ("XDG_STATE_HOME".to_string(), env_path(dir.join("state"))),
+    ]
+}
+
+pub fn railwise_db_path(app: &tauri::AppHandle) -> PathBuf {
+    desktop_dir(app)
+        .join("data")
+        .join("railwise")
+        .join("railwise.db")
 }
 
 #[derive(Clone, Debug)]
@@ -83,25 +116,6 @@ impl CommandChild {
             .try_send(())
             .map_err(|e| std::io::Error::other(e.to_string()))
     }
-}
-
-pub async fn get_config(app: &AppHandle) -> Option<Config> {
-    let (events, _) = spawn_command(app, "debug config", &[]).ok()?;
-
-    events
-        .fold(String::new(), async |mut config_str, event| {
-            if let CommandEvent::Stdout(s) = &event {
-                config_str += s.as_str()
-            }
-            if let CommandEvent::Stderr(s) = &event {
-                config_str += s.as_str()
-            }
-
-            config_str
-        })
-        .map(|v| serde_json::from_str::<Config>(&v))
-        .await
-        .ok()
 }
 
 fn get_cli_install_dir() -> Option<PathBuf> {
@@ -137,7 +151,7 @@ fn is_cli_installed() -> bool {
         .unwrap_or(false)
 }
 
-const INSTALL_SCRIPT: &str = include_str!("../../../../install");
+const INSTALL_SCRIPT: &str = include_str!("../../install");
 
 #[tauri::command]
 #[specta::specta]
@@ -190,7 +204,8 @@ fn install_cli_unix(sidecar: &Path) -> Result<String, String> {
 
 #[cfg(windows)]
 fn install_cli_windows(sidecar: &Path) -> Result<String, String> {
-    let dir = get_cli_install_dir().ok_or_else(|| "Could not determine install path".to_string())?;
+    let dir =
+        get_cli_install_dir().ok_or_else(|| "Could not determine install path".to_string())?;
     std::fs::create_dir_all(&dir).map_err(|e| format!("Failed to create install dir: {e}"))?;
 
     let install_path =
@@ -297,9 +312,6 @@ pub fn sync_cli(app: tauri::AppHandle) -> Result<(), String> {
     Ok(())
 }
 
-fn get_user_shell() -> String {
-    std::env::var("SHELL").unwrap_or_else(|_| "/bin/sh".to_string())
-}
 
 fn is_wsl_enabled(_app: &tauri::AppHandle) -> bool {
     get_wsl_config(_app.clone()).is_ok_and(|v| v.enabled)
@@ -321,26 +333,7 @@ pub fn spawn_command(
     args: &str,
     extra_env: &[(&str, String)],
 ) -> Result<(impl Stream<Item = CommandEvent> + 'static, CommandChild), std::io::Error> {
-    let state_dir = app
-        .path()
-        .resolve("", BaseDirectory::AppLocalData)
-        .expect("Failed to resolve app local data dir");
-
-    let mut envs = vec![
-        (
-            "RAILWISE_EXPERIMENTAL_ICON_DISCOVERY".to_string(),
-            "true".to_string(),
-        ),
-        (
-            "RAILWISE_EXPERIMENTAL_FILEWATCHER".to_string(),
-            "true".to_string(),
-        ),
-        ("RAILWISE_CLIENT".to_string(), "desktop".to_string()),
-        (
-            "XDG_STATE_HOME".to_string(),
-            state_dir.to_string_lossy().to_string(),
-        ),
-    ];
+    let mut envs = desktop_envs(&desktop_dir(app));
     envs.extend(
         extra_env
             .iter()
@@ -395,16 +388,8 @@ pub fn spawn_command(
         }
     } else {
         let sidecar = get_sidecar_path(app);
-        let shell = get_user_shell();
-
-        let line = if shell.ends_with("/nu") {
-            format!("^\"{}\" {}", sidecar.display(), args)
-        } else {
-            format!("\"{}\" {}", sidecar.display(), args)
-        };
-
-        let mut cmd = Command::new(shell);
-        cmd.args(["-l", "-c", &line]);
+        let mut cmd = Command::new(sidecar);
+        cmd.args(args.split_whitespace());
 
         for (key, value) in envs {
             cmd.env(key, value);
@@ -556,6 +541,47 @@ pub fn serve(
     );
 
     (child, exit_rx)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn desktop_envs_isolate_cli_state() {
+        let dir = PathBuf::from("/tmp/railwise-desktop");
+        let envs = desktop_envs(&dir);
+
+        assert!(envs.contains(&("RAILWISE_CLIENT".to_string(), "desktop".to_string())));
+        assert!(envs.contains(&(
+            "RAILWISE_DISABLE_PROJECT_CONFIG".to_string(),
+            "true".to_string()
+        )));
+        assert!(envs.contains(&(
+            "RAILWISE_DISABLE_AUTOUPDATE".to_string(),
+            "true".to_string()
+        )));
+        assert!(envs.contains(&(
+            "RAILWISE_HOME".to_string(),
+            "/tmp/railwise-desktop/home".to_string()
+        )));
+        assert!(envs.contains(&(
+            "XDG_CONFIG_HOME".to_string(),
+            "/tmp/railwise-desktop/config".to_string()
+        )));
+        assert!(envs.contains(&(
+            "XDG_DATA_HOME".to_string(),
+            "/tmp/railwise-desktop/data".to_string()
+        )));
+        assert!(envs.contains(&(
+            "XDG_CACHE_HOME".to_string(),
+            "/tmp/railwise-desktop/cache".to_string()
+        )));
+        assert!(envs.contains(&(
+            "XDG_STATE_HOME".to_string(),
+            "/tmp/railwise-desktop/state".to_string()
+        )));
+    }
 }
 
 pub mod sqlite_migration {
