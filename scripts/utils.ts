@@ -39,6 +39,9 @@ export async function copyBinaryToSidecarFolder(source: string, target = RUST_TA
   await $`mkdir -p src-tauri/sidecars`
   const dest = windowsify(`src-tauri/sidecars/railwise-cli-${target}`)
   await $`cp ${source} ${dest}`
+  await $`chmod +x ${dest}`
+  await $`xattr -d com.apple.quarantine ${dest}`.quiet().nothrow()
+  await $`xattr -d com.apple.provenance ${dest}`.quiet().nothrow()
 
   console.log(`Copied ${source} to ${dest}`)
 }
