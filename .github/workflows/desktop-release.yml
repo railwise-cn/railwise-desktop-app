@@ -68,6 +68,8 @@ jobs:
 
       - name: Build sidecar
         working-directory: .
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: bun ./scripts/prepare.ts
 
       - name: Detect optional signing secrets
