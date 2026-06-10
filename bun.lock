@@ -5,10 +5,10 @@
     "": {
       "name": "@railwise/desktop",
       "dependencies": {
-        "@railwise/app": "file:vendor/shared/railwise-app-0.0.0-codex-opencode-v1-16-cli-sync-202606100125.tgz",
-        "@railwise/sdk": "file:vendor/shared/railwise-sdk-0.0.0-codex-opencode-v1-16-cli-sync-202606100125.tgz",
-        "@railwise/ui": "file:vendor/shared/railwise-ui-0.0.0-codex-opencode-v1-16-cli-sync-202606100125.tgz",
-        "@railwise/util": "file:vendor/shared/railwise-util-0.0.0-codex-opencode-v1-16-cli-sync-202606100125.tgz",
+        "@railwise/app": "file:vendor/shared/railwise-app-1.2.31.tgz",
+        "@railwise/sdk": "file:vendor/shared/railwise-sdk-1.2.31.tgz",
+        "@railwise/ui": "file:vendor/shared/railwise-ui-1.2.31.tgz",
+        "@railwise/util": "file:vendor/shared/railwise-util-1.2.31.tgz",
         "@solid-primitives/i18n": "2.2.1",
         "@solid-primitives/storage": "4.3.3",
         "@solidjs/meta": "0.29.4",
@@ -44,10 +44,10 @@
     },
   },
   "overrides": {
-    "@railwise/app": "file:vendor/shared/railwise-app-0.0.0-codex-opencode-v1-16-cli-sync-202606100125.tgz",
-    "@railwise/sdk": "file:vendor/shared/railwise-sdk-0.0.0-codex-opencode-v1-16-cli-sync-202606100125.tgz",
-    "@railwise/ui": "file:vendor/shared/railwise-ui-0.0.0-codex-opencode-v1-16-cli-sync-202606100125.tgz",
-    "@railwise/util": "file:vendor/shared/railwise-util-0.0.0-codex-opencode-v1-16-cli-sync-202606100125.tgz",
+    "@railwise/app": "file:vendor/shared/railwise-app-1.2.31.tgz",
+    "@railwise/sdk": "file:vendor/shared/railwise-sdk-1.2.31.tgz",
+    "@railwise/ui": "file:vendor/shared/railwise-ui-1.2.31.tgz",
+    "@railwise/util": "file:vendor/shared/railwise-util-1.2.31.tgz",
   },
   "packages": {
     "@actions/artifact": ["@actions/artifact@4.0.0", "", { "dependencies": { "@actions/core": "^1.10.0", "@actions/github": "^6.0.1", "@actions/http-client": "^2.1.0", "@azure/core-http": "^3.0.5", "@azure/storage-blob": "^12.15.0", "@octokit/core": "^5.2.1", "@octokit/plugin-request-log": "^1.0.4", "@octokit/plugin-retry": "^3.0.9", "@octokit/request": "^8.4.1", "@octokit/request-error": "^5.1.1", "@protobuf-ts/plugin": "^2.2.3-alpha.1", "archiver": "^7.0.1", "jwt-decode": "^3.1.2", "unzip-stream": "^0.3.1" } }, "sha512-HCc2jMJRAfviGFAh0FsOR/jNfWhirxl7W6z8zDtttt0GltwxBLdEIjLiweOPFl9WbyJRW1VWnPUSAixJqcWUMQ=="],
@@ -260,13 +260,13 @@
 
     "@protobuf-ts/runtime-rpc": ["@protobuf-ts/runtime-rpc@2.11.1", "", { "dependencies": { "@protobuf-ts/runtime": "^2.11.1" } }, "sha512-4CqqUmNA+/uMz00+d3CYKgElXO9VrEbucjnBFEjqI4GuDrEQ32MaI3q+9qPBvIGOlL4PmHXrzM32vBPWRhQKWQ=="],
 
-    "@railwise/app": ["@railwise/app@vendor/shared/railwise-app-0.0.0-codex-opencode-v1-16-cli-sync-202606100125.tgz", { "dependencies": { "@kobalte/core": "0.13.11", "@monaco-editor/loader": "1.7.0", "@railwise/sdk": "0.0.0-codex-opencode-v1-16-cli-sync-202606100125", "@railwise/ui": "0.0.0-codex-opencode-v1-16-cli-sync-202606100125", "@railwise/util": "0.0.0-codex-opencode-v1-16-cli-sync-202606100125", "@shikijs/transformers": "3.9.2", "@solid-primitives/active-element": "2.1.3", "@solid-primitives/audio": "1.4.2", "@solid-primitives/event-bus": "1.1.2", "@solid-primitives/i18n": "2.2.1", "@solid-primitives/media": "2.3.3", "@solid-primitives/resize-observer": "2.1.3", "@solid-primitives/scroll": "2.1.3", "@solid-primitives/storage": "4.3.3", "@solid-primitives/websocket": "1.3.1", "@solidjs/meta": "0.29.4", "@solidjs/router": "0.15.4", "@thisbeyond/solid-dnd": "0.7.5", "@types/luxon": "3.7.1", "diff": "8.0.2", "fuzzysort": "3.1.0", "ghostty-web": "0.4.0", "luxon": "3.6.1", "marked": "17.0.1", "marked-shiki": "1.2.1", "monaco-editor": "0.55.1", "remeda": "2.26.0", "shiki": "3.20.0", "solid-js": "1.9.10", "solid-list": "0.3.0", "tailwindcss": "4.1.11", "zod": "4.1.8" } }, "sha512-AOhagHZGRE0DannQbn2+d65Be+YnYj4riG5Vc5TuMcEfRHoPfXczZaPgH55u/SzZ+IqRqGsJUPhpyzIQIkpp/A=="],
+    "@railwise/app": ["@railwise/app@vendor/shared/railwise-app-1.2.31.tgz", { "dependencies": { "@kobalte/core": "0.13.11", "@monaco-editor/loader": "1.7.0", "@railwise/sdk": "1.2.31", "@railwise/ui": "1.2.31", "@railwise/util": "1.2.31", "@shikijs/transformers": "3.9.2", "@solid-primitives/active-element": "2.1.3", "@solid-primitives/audio": "1.4.2", "@solid-primitives/event-bus": "1.1.2", "@solid-primitives/i18n": "2.2.1", "@solid-primitives/media": "2.3.3", "@solid-primitives/resize-observer": "2.1.3", "@solid-primitives/scroll": "2.1.3", "@solid-primitives/storage": "4.3.3", "@solid-primitives/websocket": "1.3.1", "@solidjs/meta": "0.29.4", "@solidjs/router": "0.15.4", "@thisbeyond/solid-dnd": "0.7.5", "@types/luxon": "3.7.1", "diff": "8.0.2", "fuzzysort": "3.1.0", "ghostty-web": "0.4.0", "luxon": "3.6.1", "marked": "17.0.1", "marked-shiki": "1.2.1", "monaco-editor": "0.55.1", "remeda": "2.26.0", "shiki": "3.20.0", "solid-js": "1.9.10", "solid-list": "0.3.0", "tailwindcss": "4.1.11", "zod": "4.1.8" } }, "sha512-Vuk0IByCd3/U4mc9BA0NmCvYqhvtstO8a0D/uEyYUrJ5wlqDMri3RALl4IS7QO9D4N/q11WAW5Bs7xReOQ4Nkg=="],
 
-    "@railwise/sdk": ["@railwise/sdk@vendor/shared/railwise-sdk-0.0.0-codex-opencode-v1-16-cli-sync-202606100125.tgz", {}, "sha512-wlL/p//Xk3EtdHk+V4EXevGUqNCax5TZGPk2sIN7WqWcppiCiFNIhn4/9cXaydZMx9xA3S9OPiPM7PtvPqpvGg=="],
+    "@railwise/sdk": ["@railwise/sdk@vendor/shared/railwise-sdk-1.2.31.tgz", {}, "sha512-8YP6ILssBEHHapbseEXUkABM1UzVB4VH9dR75OxIXDmZNTzR3a3mtWXQMmhJmgJ6nx4+HlKBSYs36WN/WdqYZw=="],
 
-    "@railwise/ui": ["@railwise/ui@vendor/shared/railwise-ui-0.0.0-codex-opencode-v1-16-cli-sync-202606100125.tgz", { "dependencies": { "@kobalte/core": "0.13.11", "@pierre/diffs": "1.1.0-beta.13", "@railwise/sdk": "0.0.0-codex-opencode-v1-16-cli-sync-202606100125", "@railwise/util": "0.0.0-codex-opencode-v1-16-cli-sync-202606100125", "@shikijs/transformers": "3.9.2", "@solid-primitives/bounds": "0.1.3", "@solid-primitives/media": "2.3.3", "@solid-primitives/resize-observer": "2.1.3", "@solidjs/meta": "0.29.4", "@typescript/native-preview": "7.0.0-dev.20251207.1", "dompurify": "3.3.1", "fuzzysort": "3.1.0", "katex": "0.16.27", "luxon": "3.6.1", "marked": "17.0.1", "marked-katex-extension": "5.1.6", "marked-shiki": "1.2.1", "morphdom": "2.7.8", "remeda": "2.26.0", "shiki": "3.20.0", "solid-js": "1.9.10", "solid-list": "0.3.0", "strip-ansi": "7.1.2", "virtua": "0.42.3" } }, "sha512-N2RytVw9KxHcU/JvTzHG/a5mv4V334uXK0q+t0UM2qYpLmud9ajM1v+H0P43KPhdW7J2mHTveL8nN/G2O2yHRw=="],
+    "@railwise/ui": ["@railwise/ui@vendor/shared/railwise-ui-1.2.31.tgz", { "dependencies": { "@kobalte/core": "0.13.11", "@pierre/diffs": "1.1.0-beta.13", "@railwise/sdk": "1.2.31", "@railwise/util": "1.2.31", "@shikijs/transformers": "3.9.2", "@solid-primitives/bounds": "0.1.3", "@solid-primitives/media": "2.3.3", "@solid-primitives/resize-observer": "2.1.3", "@solidjs/meta": "0.29.4", "@typescript/native-preview": "7.0.0-dev.20251207.1", "dompurify": "3.3.1", "fuzzysort": "3.1.0", "katex": "0.16.27", "luxon": "3.6.1", "marked": "17.0.1", "marked-katex-extension": "5.1.6", "marked-shiki": "1.2.1", "morphdom": "2.7.8", "remeda": "2.26.0", "shiki": "3.20.0", "solid-js": "1.9.10", "solid-list": "0.3.0", "strip-ansi": "7.1.2", "virtua": "0.42.3" } }, "sha512-RVKwGaQlduleX2vr6t8tVAjPtkR1xn/jfRlxtY0y9UeiWA65NySQqzIpCBPpBZbvWkDQV5N/u+tXxfShOpof5A=="],
 
-    "@railwise/util": ["@railwise/util@vendor/shared/railwise-util-0.0.0-codex-opencode-v1-16-cli-sync-202606100125.tgz", { "dependencies": { "zod": "4.1.8" } }, "sha512-NpnhY8IziLpWX4VcDpzYx/14f6+SR0LUprm/fE7nWoor5eGWFlnSMyiWs/0uTv7eDN5jmkcZgtCeimgLQteQ8A=="],
+    "@railwise/util": ["@railwise/util@vendor/shared/railwise-util-1.2.31.tgz", { "dependencies": { "zod": "4.1.8" } }, "sha512-XXpkbJ0lZeJ98FbDEdJ2Atj5LoKYVn7ksrOmFk2CuY3bOErqNk+ElGO3ItkCyxXfsdzg95DiQnLApLtsNRQwEg=="],
 
     "@rollup/rollup-android-arm-eabi": ["@rollup/rollup-android-arm-eabi@4.61.1", "", { "os": "android", "cpu": "arm" }, "sha512-JnBB8MdXj45cajvTuO5FmPlvFVJRQgvrz1uSEl3NwqFnReAPGwb8EanbGi4z2nRaqLzjJSv5/JmycoTKlRZxHA=="],
 

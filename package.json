@@ -31,9 +31,9 @@
     "tauri": "tauri"
   },
   "dependencies": {
-    "@railwise/app": "file:vendor/shared/railwise-app-0.0.0-codex-opencode-v1-16-cli-sync-202606100125.tgz",
-    "@railwise/ui": "file:vendor/shared/railwise-ui-0.0.0-codex-opencode-v1-16-cli-sync-202606100125.tgz",
-    "@railwise/util": "file:vendor/shared/railwise-util-0.0.0-codex-opencode-v1-16-cli-sync-202606100125.tgz",
+    "@railwise/app": "file:vendor/shared/railwise-app-1.2.31.tgz",
+    "@railwise/ui": "file:vendor/shared/railwise-ui-1.2.31.tgz",
+    "@railwise/util": "file:vendor/shared/railwise-util-1.2.31.tgz",
     "@solid-primitives/i18n": "2.2.1",
     "@solid-primitives/storage": "4.3.3",
     "@solidjs/router": "0.15.4",
@@ -54,7 +54,7 @@
     "virtua": "0.42.3",
     "solid-js": "1.9.10",
     "@solidjs/meta": "0.29.4",
-    "@railwise/sdk": "file:vendor/shared/railwise-sdk-0.0.0-codex-opencode-v1-16-cli-sync-202606100125.tgz"
+    "@railwise/sdk": "file:vendor/shared/railwise-sdk-1.2.31.tgz"
   },
   "devDependencies": {
     "@actions/artifact": "4.0.0",
@@ -68,9 +68,9 @@
     "vite-plugin-solid": "2.11.10"
   },
   "overrides": {
-    "@railwise/app": "file:vendor/shared/railwise-app-0.0.0-codex-opencode-v1-16-cli-sync-202606100125.tgz",
-    "@railwise/sdk": "file:vendor/shared/railwise-sdk-0.0.0-codex-opencode-v1-16-cli-sync-202606100125.tgz",
-    "@railwise/ui": "file:vendor/shared/railwise-ui-0.0.0-codex-opencode-v1-16-cli-sync-202606100125.tgz",
-    "@railwise/util": "file:vendor/shared/railwise-util-0.0.0-codex-opencode-v1-16-cli-sync-202606100125.tgz"
+    "@railwise/app": "file:vendor/shared/railwise-app-1.2.31.tgz",
+    "@railwise/sdk": "file:vendor/shared/railwise-sdk-1.2.31.tgz",
+    "@railwise/ui": "file:vendor/shared/railwise-ui-1.2.31.tgz",
+    "@railwise/util": "file:vendor/shared/railwise-util-1.2.31.tgz"
   }
 }
