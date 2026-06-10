@@ -13,6 +13,7 @@ import {
 import { Splash } from "@railwise/ui/logo"
 import type { AsyncStorage } from "@solid-primitives/storage"
 import { Navigate, Route } from "@solidjs/router"
+import { homeDir } from "@tauri-apps/api/path"
 import { getCurrentWindow } from "@tauri-apps/api/window"
 import { readImage } from "@tauri-apps/plugin-clipboard-manager"
 import { getCurrent, onOpenUrl } from "@tauri-apps/plugin-deep-link"
@@ -24,7 +25,18 @@ import { type as ostype } from "@tauri-apps/plugin-os"
 import { relaunch } from "@tauri-apps/plugin-process"
 import { open as shellOpen } from "@tauri-apps/plugin-shell"
 import { Store } from "@tauri-apps/plugin-store"
-import { type Accessor, createResource, createSignal, lazy, type JSX, onCleanup, onMount, Show, Suspense } from "solid-js"
+import {
+  type Accessor,
+  createResource,
+  createSignal,
+  For,
+  lazy,
+  type JSX,
+  onCleanup,
+  onMount,
+  Show,
+  Suspense,
+} from "solid-js"
 import { render } from "solid-js/web"
 import pkg from "../package.json"
 import { initI18n, t } from "./i18n"
@@ -39,16 +51,11 @@ import { commands, type InitStep } from "./bindings"
 import { createMenu } from "./menu"
 import { StartupTimer, DEFAULT_BUDGETS } from "./performance"
 import { installTelemetry, track } from "./lib/telemetry"
+import { startupDiagnosis } from "./startup-diagnosis"
 
-const Dashboard = lazy(() => import("./pages/dashboard"))
 const Workspace = lazy(() => import("./pages/workspace"))
 const WorkspaceDiff = lazy(() => import("./pages/workspace/diff"))
 const Loading = () => <div class="size-full" />
-const DashboardRoute = () => (
-  <Suspense fallback={<Loading />}>
-    <Dashboard />
-  </Suspense>
-)
 const WorkspaceRoute = () => (
   <Suspense fallback={<Loading />}>
     <Workspace />
@@ -59,12 +66,19 @@ const WorkspaceDiffRoute = () => (
     <WorkspaceDiff />
   </Suspense>
 )
-const DashboardRedirect = () => <Navigate href="/dashboard" />
+const HomeRedirect = () => <Navigate href="/home" />
 
 function ensureStandaloneLanding() {
-  if (location.hash === "#/dashboard") return
+  const standalone = ["/home", "/harness", "/marketplace", "/agents", "/workspace"]
+  const hasPathRoute = standalone.some((path) => location.pathname === path || location.pathname.startsWith(path + "/"))
+  if (hasPathRoute || /^\/[^/]+\/session/.test(location.pathname)) return
+  if (location.hash.startsWith("#/home")) return
+  if (location.hash.startsWith("#/harness")) return
+  if (location.hash.startsWith("#/marketplace")) return
+  if (location.hash.startsWith("#/agents")) return
   if (location.hash.startsWith("#/workspace")) return
-  history.replaceState(null, "", `${location.pathname}${location.search}#/dashboard`)
+  if (/^#\/[^/]+\/session/.test(location.hash)) return
+  history.replaceState(null, "", `${location.pathname}${location.search}#/home`)
 }
 
 // Create startup timer with performance budget and retry callback
@@ -72,38 +86,31 @@ const handleBudgetExceeded = async (phase: string, phaseData: any): Promise<bool
   console.log(`🔄 Budget exceeded for ${phase}, attempting recovery...`)
 
   switch (phase) {
-    case 'sidecar-init':
-      // Kill stuck sidecar and retry with fresh port
-      try {
-        await commands.killSidecar()
-        console.log('🔄 Killed stuck sidecar, retrying with fresh port')
-        return true
-      } catch (error) {
-        console.error('Failed to kill sidecar:', error)
-        return false
-      }
+    case "sidecar-init":
+      console.warn("Sidecar startup exceeded the soft budget; continuing to wait for Rust initialization")
+      return false
 
-    case 'server-connect':
+    case "server-connect":
       // Retry with cached server URL if available
       try {
         const cachedUrl = await commands.getDefaultServerUrl()
         if (cachedUrl) {
-          console.log('🔄 Retrying with cached server URL:', cachedUrl)
+          console.log("🔄 Retrying with cached server URL:", cachedUrl)
           return true
         }
       } catch (error) {
-        console.error('Failed to get cached URL:', error)
+        console.error("Failed to get cached URL:", error)
       }
       return false
 
-    case 'app-init':
+    case "app-init":
       // Critical failure - restart with minimal setup
-      console.error('❌ App initialization failed, this is critical')
+      console.error("❌ App initialization failed, this is critical")
       return false
 
-    case 'ui-ready':
+    case "ui-ready":
       // Continue with degraded experience
-      console.warn('⚠️ UI ready timeout - continuing with degraded experience')
+      console.warn("⚠️ UI ready timeout - continuing with degraded experience")
       return false
 
     default:
@@ -151,7 +158,7 @@ const listenForDeepLinks = async () => {
 const createPlatform = (): Platform => {
   const os = (() => {
     const type = ostype()
-    if (type === "macos" || type === "windows" || type === "linux") return type
+    if (type === "macos" || type === "windows") return type
     return undefined
   })()
 
@@ -170,6 +177,8 @@ const createPlatform = (): Platform => {
 
   return {
     platform: "desktop",
+    appName: "RAILWISE Desktop",
+    supportUrl: "https://railwise.ai/desktop-feedback",
     os,
     version: pkg.version,
 
@@ -454,15 +463,6 @@ const createPlatform = (): Platform => {
       await commands.setDefaultServerUrl(url)
     },
 
-    getDisplayBackend: async () => {
-      const result = await commands.getDisplayBackend().catch(() => null)
-      return result
-    },
-
-    setDisplayBackend: async (backend) => {
-      await commands.setDisplayBackend(backend)
-    },
-
     parseMarkdown: (markdown: string) => commands.parseMarkdownCommand(markdown),
 
     webviewZoom,
@@ -583,9 +583,12 @@ render(() => {
               menuTrigger = (id) => cmd.trigger(id)
 
               // UI is now interactive - server connection is complete
-              performanceTimer.endPhase("server-connect").then(() => {
-                performanceTimer.startPhase("ui-ready")
-              }).catch(console.error)
+              performanceTimer
+                .endPhase("server-connect")
+                .then(() => {
+                  performanceTimer.startPhase("ui-ready")
+                })
+                .catch(console.error)
 
               onMount(() => {
                 if (import.meta.env.DEV) {
@@ -611,37 +614,54 @@ render(() => {
                 }
 
                 // UI is fully mounted and interactive
-                performanceTimer.endPhase("ui-ready").then((result) => {
-                  const report = performanceTimer.getReport()
+                performanceTimer
+                  .endPhase("ui-ready")
+                  .then((result) => {
+                    const report = performanceTimer.getReport()
 
-                  // Enhanced startup completion reporting
-                  const statusIcon = report.budgetStatus === 'ok' ? '🚀' :
-                                   report.budgetStatus === 'warning' ? '⚠️' : '🚨'
+                    // Enhanced startup completion reporting
+                    const statusIcon =
+                      report.budgetStatus === "ok" ? "🚀" : report.budgetStatus === "warning" ? "⚠️" : "🚨"
 
-                  console.log(`${statusIcon} RAILWISE Desktop ready in ${report.total.toFixed(2)}ms (target: <3000ms)`)
+                    console.log(
+                      `${statusIcon} RAILWISE Desktop ready in ${report.total.toFixed(2)}ms (target: <15000ms)`,
+                    )
 
-                  // Log individual phase performance
-                  report.phases.forEach(phase => {
-                    if (phase.duration) {
-                      const status = phase.status === 'completed' ? '✅' :
-                                   phase.status === 'exceeded' ? '⚠️' :
-                                   phase.status === 'failed' ? '❌' : '🔄'
-                      console.log(`  ${status} ${phase.name}: ${phase.duration.toFixed(2)}ms${phase.budget ? ` (budget: ${phase.budget}ms)` : ''}`)
+                    // Log individual phase performance
+                    report.phases.forEach((phase) => {
+                      if (phase.duration) {
+                        const status =
+                          phase.status === "completed"
+                            ? "✅"
+                            : phase.status === "exceeded"
+                              ? "⚠️"
+                              : phase.status === "failed"
+                                ? "❌"
+                                : "🔄"
+                        console.log(
+                          `  ${status} ${phase.name}: ${phase.duration.toFixed(2)}ms${phase.budget ? ` (budget: ${phase.budget}ms)` : ""}`,
+                        )
+                      }
+                    })
+
+                    // Performance telemetry for analysis
+                    track("desktop_startup", {
+                      status: report.budgetStatus,
+                      total: Math.round(report.total),
+                      route: location.hash || location.pathname,
+                    })
+
+                    if (report.budgetStatus !== "ok") {
+                      const exceededPhases = report.phases.filter(
+                        (p) => p.status === "exceeded" || p.status === "failed",
+                      )
+                      console.warn(
+                        `Performance issues detected:`,
+                        exceededPhases.map((p) => `${p.name}: ${p.duration}ms`),
+                      )
                     }
                   })
-
-                  // Performance telemetry for analysis
-                  track("desktop_startup", {
-                    status: report.budgetStatus,
-                    total: Math.round(report.total),
-                    route: location.hash || location.pathname,
-                  })
-
-                  if (report.budgetStatus !== 'ok') {
-                    const exceededPhases = report.phases.filter(p => p.status === 'exceeded' || p.status === 'failed')
-                    console.warn(`Performance issues detected:`, exceededPhases.map(p => `${p.name}: ${p.duration}ms`))
-                  }
-                }).catch(console.error)
+                  .catch(console.error)
               })
 
               return (
@@ -664,20 +684,21 @@ render(() => {
               <Show when={!defaultServer.loading}>
                 <div class="railwise-app-shell" data-testid="app-shell">
                   <AppInterface
-                    defaultPath="/dashboard"
+                    defaultPath="/home"
                     defaultServer={defaultServer.latest ?? ServerConnection.key(server)}
                     routes={
                       <>
-                        <Route path="/dashboard" component={DashboardRoute} />
-                        <Route path="/dashboard/*rest" component={DashboardRedirect} />
+                        <Route path="/dashboard" component={HomeRedirect} />
+                        <Route path="/dashboard/*rest" component={HomeRedirect} />
                         <Route path="/workspace" component={WorkspaceRoute} />
                         <Route path="/workspace/diff" component={WorkspaceDiffRoute} />
                         <Route path="/workspace/*rest" component={WorkspaceRoute} />
-                        <Route path="*rest" component={DashboardRedirect} />
+                        <Route path="*rest" component={HomeRedirect} />
                       </>
                     }
                     servers={[server]}
-                    standalonePaths={["/dashboard", "/workspace", "/agents"]}
+                    standalonePaths={["/workspace", "/home", "/harness", "/marketplace", "/agents", "/:dir/session"]}
+                    sessionRoutes
                     workbenchRoutes={false}
                   >
                     <Inner />
@@ -693,6 +714,57 @@ render(() => {
 }, root!)
 
 type ServerReadyData = { url: string; password: string | null }
+
+function StartupFailure(props: { error: unknown }) {
+  const diagnosis = startupDiagnosis(props.error)
+  const raw = String(props.error ?? "Unknown error")
+  const canOpen = diagnosis.issue === "config" || diagnosis.issue === "server" || !!diagnosis.target
+
+  const action = diagnosis.action ?? (diagnosis.issue === "server" ? "打开日志目录" : "打开位置")
+
+  const openTarget = async () => {
+    const target = diagnosis.target ?? (await fallbackTarget())
+    if (!target) return
+    await openerOpenPath(target).catch(console.error)
+  }
+
+  const fallbackTarget = async () => {
+    if (diagnosis.issue === "config") return `${await homeDir()}/.config/railwise`
+    if (diagnosis.issue === "server") {
+      const dir = await commands.getLogDir()
+      return dir
+    }
+    return undefined
+  }
+
+  return (
+    <div class="h-screen w-screen flex flex-col items-center justify-center bg-background-base px-6">
+      <div data-tauri-decorum-tb class="flex flex-row absolute top-0 right-0 z-10 h-10" />
+      <div class="flex w-full max-w-xl flex-col items-center gap-4 text-center">
+        <Splash class="w-16 h-20 opacity-50" />
+        <div>
+          <p class="text-14-medium text-text-strong">{diagnosis.title}</p>
+          <p class="mt-2 text-12-regular text-text-weak">{diagnosis.summary}</p>
+        </div>
+        <div class="w-full rounded-lg border border-border-subtle bg-surface-panel p-4 text-left">
+          <p class="text-12-medium text-text-strong">建议处理</p>
+          <ol class="mt-2 list-decimal space-y-1 pl-4 text-12-regular text-text-weak">
+            <For each={diagnosis.steps}>{(step) => <li>{step}</li>}</For>
+          </ol>
+          <p class="mt-3 break-words whitespace-pre-wrap text-11-regular text-text-muted">{raw}</p>
+        </div>
+        <Show when={canOpen}>
+          <button
+            class="rounded-md border border-border-subtle px-3 py-2 text-12-medium text-text-strong hover:bg-surface-hover"
+            onClick={openTarget}
+          >
+            {action}
+          </button>
+        </Show>
+      </div>
+    </div>
+  )
+}
 
 // Gate component that waits for the server to be ready
 function ServerGate(props: { children: (data: Accessor<ServerReadyData>) => JSX.Element }) {
@@ -711,21 +783,7 @@ function ServerGate(props: { children: (data: Accessor<ServerReadyData>) => JSX.
   })
 
   return (
-    <Show
-      when={serverData.state !== "errored"}
-      fallback={
-        <div class="h-screen w-screen flex flex-col items-center justify-center bg-background-base gap-4">
-          <Splash class="w-16 h-20 opacity-50" />
-          <div class="max-w-md px-4 text-center">
-            <p class="text-sm font-medium text-red-400">Failed to start server</p>
-            <p class="mt-2 text-xs text-zinc-400 break-words whitespace-pre-wrap">
-              {String(serverData.error ?? "Unknown error")}
-            </p>
-          </div>
-          <div data-tauri-decorum-tb class="flex flex-row absolute top-0 right-0 z-10 h-10" />
-        </div>
-      }
-    >
+    <Show when={serverData.state !== "errored"} fallback={<StartupFailure error={serverData.error} />}>
       <Show
         when={serverData.state !== "pending" && serverData()}
         fallback={
